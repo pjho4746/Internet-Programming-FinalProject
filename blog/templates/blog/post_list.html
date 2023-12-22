@@ -1,0 +1,88 @@
+<!--base.html 문서를 가져와 사용할 것이다-->
+{% extends 'blog/base.html' %}
+{% block main_area %}
+        {% if user.is_authenticated %}
+            {% if user.is_staff or user.is_superuser %}
+                <a class="btn btn-info btn-small float-right" href="/blog/create_post">
+                    <i class="fas fa-pen"></i>New Post</a>
+            {% endif %}
+        {% endif %}
+            <h1>
+                Blog
+                {% if search_info %} <span class="badge bg-secondary">{{ search_info }}</span> {% endif %}
+                {% if category %} <span class="badge bg-secondary">{{ category }}</span> {% endif %}
+                {% if tag %}<i class="fas fa-tags"></i><span class="badge bg-light">{{ tag }}({{ tag.post_set.count }})</span>{% endif %}
+            </h1>  <!--test-->
+            {% if post_list.exists %}  <!-- Blog post (포스트 2개, 전체 내용을 출력하는 형태의 기존 html)-->
+            {% for p in post_list %}
+          <!-- Blog post-->
+          <div class="card mb-4" id="post-{{ p.pk }}">
+              {% if p.head_image %}
+                  <!--if문을 주지 않으면 모두 업로드 되지 않으면 오류 화면이 뜸-->
+                  <img class="card-img-top" src="{{ p.head_image.url }}" alt="{{p}}의 head image" />
+              {% else %}
+                  <!--사진이 없는 경우에 주소에서 사진을 가져와 첨부-->
+                  <!--seed, 각각의 아이디를 주지 않으면 동일한 사진을 출력-->
+                  <img class="card-img-top" src="https://picsum.photos/seed/{{ p.id }}/800/200" alt="random image"/>
+              {% endif %}
+              <div class="card-body">
+                {% if p.category %}
+                    <span class="badge bg-secondary float-right">{{ p.category }}</span>
+                {% else %}
+                    <span class="badge bg-secondary float-right">미분류</span>
+                {% endif %}
+                <!--내장 템플릿 사용 / 영어(대문자) -->
+                <h2 class="card-title h4">{{ p.title | upper }}</h2>
+                <!--hook text-->
+                <!--있는 경우에만 출력-->
+                {% if p.hook_text %}
+                   <!--색상 변경 : text_muted-->
+                   <h5 class="text_muted">{{ p.hook_text }} </h5>
+                {% endif %}
+                <!--내장 템플릿 사용 / 간략하게 보여주기 truncatewords & truncatechars -->
+                <p class="card-text">{{ p.get_content_markdown | truncatewords_html:50 | safe }}</p>
+                {% if p.tags.exists %}
+                  <i class="fas fa-tags"></i>
+                  {% for tag in p.tags.all %}
+                    <a href="{{tag.get_absolute_url}}"><span class="badge bg-light">{{ tag }}</span></a>
+                  {% endfor %}
+                  <br/><br/>
+                {% endif %}
+                <a class="btn btn-primary" href="{{ p.get_absolute_url }}">Read more →</a>
+            </div>
+              <div class = "card-footer">
+                  <!--내장 템플릿 사용 / 시간 출력 형식 바꿈-->
+                  {{ p.created_at | date:"20y-m-d h:m:s"}} by {{ p.author | upper }}
+              </div>
+        </div>
+            {% endfor %}
+            {% else %} <!--test-->
+              <h2>아직 게시물이 없습니다.</h2>
+            {% endif %}
+                <!-- Pagination-->
+                    <!--<nav aria-label="Pagination">-->
+                        {% if is_paginated %}
+                        <ul class="pagination justify-content-center my-4">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{page_obj.previous_page_number}}" tabindex="-1" aria-disabled="true">&larr; Newer</a>
+                            </li> <!--특수기호는 &붙임-->
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">&larr; Newer</a>
+                            </li>
+                            {% endif %}
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{page_obj.next_page_number}}">Older &rarr;</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#!">Older &rarr;</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        {%endif %}
+                    </nav>
+            </div>
+{% endblock %}
